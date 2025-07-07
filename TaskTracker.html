@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker</title>
+<style>
+    body {
+        background-color: #f0f2f5;
+        font-family: sans-serif;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+    }
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: rgb(255, 255, 255);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .hidden {
+        display: none;
+    }
+    .input-group {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+    .entry-card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Task Tracker</h1>
+
+    <div class="nav-buttons">
+        <button id="addTasksPageBtn">Add New Entry</button>
+        <button id="showTasksScreenBtn">View All Entries</button> <br><br>
+    </div>
+
+    <div id="addTasksPage">
+        
+        <div class="input-group">
+            <label for="tasks">Name of the Task:</label>
+            <input type="text" name="Tasks" id="tasks">
+        </div>
+
+        <div class="input-group">
+            <label for="description">Description for the Task:</label>
+            <input type="text" name="Description" id="description">
+        </div>
+
+        <div class="input-group">
+            <label for="dateAndTime">Date and Time for Completion:</label>
+            <input type="datetime-local" name="DateAndTime" id="dateAndTime">
+        </div>
+
+        <button id="saveEntryBtn">Save Task Entry</button>
+        <p id="feedbackMessage"></p>
+    </div>
+    
+    <div id="viewTasksPage" class="hidden">
+        <h2>Tasks List</h2>
+        <button id="clearEntriesBtn">Clear All Entries</button>
+        <div id="entryList">
+        </div>
+    </div>
+</div>
+    
+<script>
+const addTasksPage = document.getElementById("addTasksPage");
+const viewTasksPage = document.getElementById("viewTasksPage");
+
+const addTasksPageBtn = document.getElementById("addTasksPageBtn");
+const showTasksScreenBtn = document.getElementById("showTasksScreenBtn");
+const saveEntryBtn = document.getElementById("saveEntryBtn");
+const clearEntriesBtn = document.getElementById("clearEntriesBtn");
+
+const tasksInput = document.getElementById("tasks");
+const descriptionInput = document.getElementById("description");
+const dateAndTimeInput = document.getElementById("dateAndTime");
+
+const entryListDiv = document.getElementById("entryList");
+const feedbackMessage = document.getElementById("feedbackMessage");
+
+let timesheetEntries = JSON.parse(localStorage.getItem('Entries')) || [] ;
+
+function saveEntries() {
+    localStorage.setItem('Entries', JSON.stringify(timesheetEntries));
+}
+
+function displayEntries() {
+   entryListDiv.innerHTML = '';
+
+   if (timesheetEntries.length === 0) {
+        entryListDiv.innerHTML = '<p>No tasks have been added yet.</p>';
+        clearEntriesBtn.classList.add('hidden');
+        return; 
+    }
+    
+    clearEntriesBtn.classList.remove('hidden');
+    timesheetEntries.forEach(function(entry) {
+        const entryCard = document.createElement('div');
+        entryCard.className = 'entry-card';
+
+        const date = new Date(entry.dateTime);
+        const formattedDate = date.toLocaleDateString(); 
+        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        entryCard.innerHTML = `
+            <h3>Task: ${entry.task}</h3>
+            <p><strong>Description:</strong> ${entry.description}</p>
+            <p><strong>Date & Time:</strong> ${formattedDate} at ${formattedTime}</p>
+        `;
+
+        entryListDiv.appendChild(entryCard);
+    }); 
+}
+    
+function saveNewEntry() {
+    const task = tasksInput.value;
+    const description = descriptionInput.value;
+    const dateTime = dateAndTimeInput.value;
+
+    if( !task || !description || !dateTime ){
+        alert('Please fill out all the fields.');
+        return; 
+    }    
+
+    const newEntry = {
+        task: task,
+        description: description,
+        dateTime: dateTime
+    };
+
+    timesheetEntries.push(newEntry);
+
+    saveEntries();
+
+    tasksInput.value = '';
+    descriptionInput.value = '';
+    dateAndTimeInput.value = '';
+
+    feedbackMessage.textContent = 'Entry saved successfully!';
+    setTimeout(function() {
+        feedbackMessage.textContent = '';
+    }, 3000);
+}
+
+function clearAllEntries() {
+    if (confirm("Are you sure you want to delete all entries? This action cannot be undone.")) {
+        timesheetEntries = [];
+        saveEntries();
+        displayEntries();
+    }
+}
+
+addTasksPageBtn.addEventListener('click', function() {
+    addTasksPage.classList.remove('hidden');
+    viewTasksPage.classList.add('hidden');        
+});
+
+showTasksScreenBtn.addEventListener('click', function() {
+    viewTasksPage.classList.remove('hidden');
+    addTasksPage.classList.add('hidden');  
+    displayEntries(); 
+});
+
+saveEntryBtn.addEventListener('click', saveNewEntry);
+clearEntriesBtn.addEventListener('click', clearAllEntries);
+
+if (timesheetEntries.length === 0) {
+    clearEntriesBtn.classList.add('hidden');
+}
+
+</script>
+</body>
+</html>
